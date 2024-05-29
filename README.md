@@ -1,3 +1,3 @@
 # The Bitcoin DEX
 
-[thebitcoindex.com](https://thebitcoindex.com)
+[thebitcoindex.com](http://thebitcoindex.com)

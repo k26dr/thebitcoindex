@@ -1,5 +1,9 @@
 <html>
+
 <head>
+</head>
+
+<body>
   <h1>The Bitcoin DEX</h1>
 
   <h3>Get Started</h3>
@@ -7,11 +11,20 @@
   <code>03a035e2c48a83ace1a2ff7937746f8a5ab6d26d2ff939d7e76dcd098dd2153064@thebitcoindex.com:9735</code>
 
   <h3>Trading Instructions</h3>
+  <p>Outgoing bitcoin sends require a 1000 sat fee transaction as an anti-spam measure. Fee transactions must be sent out before the trade and are non-refundable.</p>
   <p>The out chain for USDC is Zksync Era. Zksync Era was chosen because it is the only ETH rollup with trustless withdraws.</p>
-  <p>To generate inbound capacity, first trade Bitcoin to USDC. Your inbound capacity will be the size of the trade you sent out.</p>
+  <p>To generate inbound capacity, first trade Bitcoin to USDC. Your inbound capacity will be the net size of the trades you send out.</p>
 
-</head>
-<body>
+  <h3>Trade (BTC to USDC)</h3>
+  <p><button id="generate-fee-invoice">Generate Fee Invoice</button></p>
+  <p id="fee-invoice"></p>
+
+  <script>
+    document.getElementById("generate-fee-invoice").addEventListener("click", async function () {
+      const response = await fetch("/api/invoice/fee");
+      const invoice = await response.text();
+    });
+  </script>
 
 </body>
 </html>

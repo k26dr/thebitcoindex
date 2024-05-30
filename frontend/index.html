@@ -18,17 +18,30 @@
   <h3>Trade (BTC to USDC)</h3>
   <p>Zksync Address: <input id="zksync-address-input" value="0xAbA965BDb05d969903e3e83063D7b8cc2D7dE5e2" placeholder="0xabcdef123..."/>
   <p>Amount to trade (BTC): <input id="btc-amount-input" type="number" value="0.01" placeholder="0.01"/>
-  <p><button id="generate-fee-invoice">Generate Fee Invoice</button></p>
-  <code style="word-wrap:break-word" id="fee-invoice"></code>
-  <p style="display:none" id="fee-invoice-helper">Pay the fee invoice then you can generate a new invoice to trade.</p>
+  <p>
+    <button id="generate-fee-invoice">Generate Fee Invoice</button>
+    <button id="generate-trade-invoice">Generate Trade Invoice</button>
+  </p>
+  <code style="word-wrap:break-word" id="invoice-display"></code>
+  <p id="invoice-help-text"></p>
 
   <script>
     document.getElementById("generate-fee-invoice").addEventListener("click", async function () {
       const address = document.getElementById("zksync-address-input").value.trim();
       const response = await fetch(`http://thebitcoindex.com/api/invoice/zkera/usdc/${address}/1000`);
       const invoice = await response.text();
-      document.getElementById("fee-invoice").innerHTML = invoice;
-      document.getElementById("fee-invoice-helper").style.display = "block";
+      document.getElementById("invoice-display").innerHTML = invoice;
+      document.getElementById("invoice-help-text").innerHTML = "Pay the fee invoice then you can generate a trade invoice";
+    });
+    document.getElementById("generate-trade-invoice").addEventListener("click", async function () {
+      document.getElementById("invoice-help-text").innerHTML = "Checking fee status...";
+
+      const address = document.getElementById("zksync-address-input").value.trim();
+      const amount = parseInt(document.getElementById("btc-amount-input").valueAsNumber * 1e8);
+      const response = await fetch(`http://thebitcoindex.com/api/invoice/zkera/usdc/${address}/${amount}`);
+      const invoice = await response.text();
+      document.getElementById("invoice-display").innerHTML = invoice;
+      document.getElementById("invoice-help-text").style.display = "block";
     });
   </script>
 

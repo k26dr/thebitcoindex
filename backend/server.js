@@ -4,6 +4,7 @@ const nodeChildProcess = require("node:child_process");
 const util = require("node:util");
 const exec = util.promisify(nodeChildProcess.exec);
 const port = process.env.PORT || 3000
+const db = require('better-sqlite3')('thebitcoindex.db');
 
 // CORS
 app.use("/", (req, res, next) => {
@@ -17,7 +18,13 @@ app.use("/", (req, res, next) => {
 });
 
 app.get("/feestatus/:chain/:currency/:address", async (req, res, next) => {
-    res.status(200).send("paid");
+    console.log(req.params);
+    const row = db.prepare(
+      "SELECT paid FROM fees_paid WHERE chain = 'zksync' AND address = ?"
+    ).get(req.params.address.toLowerCase())
+    console.log(row);
+    if (row && row.paid === 1) res.status(200).send("paid");
+    else res.status(200).send("unpaid");
 });
 
 app.get("/invoice/:chain/:currency/:address/:sats", async (req, res, next) => {

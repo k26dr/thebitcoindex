@@ -16,13 +16,19 @@
   <p>To generate inbound capacity, first trade Bitcoin to USDC. Your inbound capacity will be the net size of the trades you send out.</p>
 
   <h3>Trade (BTC to USDC)</h3>
+  <p>Zksync Address: <input id="zksync-address-input" value="0xAbA965BDb05d969903e3e83063D7b8cc2D7dE5e2" placeholder="0xabcdef123..."/>
+  <p>Amount to trade (BTC): <input id="btc-amount-input" type="number" value="0.01" placeholder="0.01"/>
   <p><button id="generate-fee-invoice">Generate Fee Invoice</button></p>
-  <p id="fee-invoice"></p>
+  <code style="word-wrap:break-word" id="fee-invoice"></code>
+  <p style="display:none" id="fee-invoice-helper">Pay the fee invoice then you can generate a new invoice to trade.</p>
 
   <script>
     document.getElementById("generate-fee-invoice").addEventListener("click", async function () {
-      const response = await fetch("/api/invoice/fee");
+      const address = document.getElementById("zksync-address-input").value.trim();
+      const response = await fetch(`http://thebitcoindex.com/api/invoice/zkera/usdc/${address}/1000`);
       const invoice = await response.text();
+      document.getElementById("fee-invoice").innerHTML = invoice;
+      document.getElementById("fee-invoice-helper").style.display = "block";
     });
   </script>
 

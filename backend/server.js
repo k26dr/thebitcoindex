@@ -16,6 +16,10 @@ app.use("/", (req, res, next) => {
   next();
 });
 
+app.get("/feestatus/:chain/:currency/:address", async (req, res, next) => {
+    res.status(200).send("paid");
+});
+
 app.get("/invoice/:chain/:currency/:address/:sats", async (req, res, next) => {
   const { chain, currency, address, sats } = req.params;
   const invoicegen = await exec(

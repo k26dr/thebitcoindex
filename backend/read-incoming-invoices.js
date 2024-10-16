@@ -1,3 +1,11 @@
+/**
+ * Copyright (C) Kedar Iyer - All Rights Reserved
+ *
+ * Unauthorized copying of this file, via any medium is strictly prohibited
+ * Proprietary and confidential
+ * Written by Kedar Iyer kedarmail@gmail.com: August 1, 2024
+ */
+
 const nodeChildProcess = require("node:child_process");
 const util = require("node:util");
 const exec = util.promisify(nodeChildProcess.exec);

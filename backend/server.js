@@ -33,6 +33,10 @@ app.use("/", (req, res, next) => {
   next();
 });
 
+app.get("/", (req, res, next) => {
+  return res.sendFile(__dirname + '/index.html');
+})
+
 app.get("/feestatus/:chain/:currency/:address", async (req, res, next) => {
     console.log(req.params);
     const row = db.prepare(

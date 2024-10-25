@@ -28,36 +28,44 @@
     document.getElementById("generate-fee-invoice").addEventListener("click", async function () {
       document.getElementById("generate-fee-invoice").disabled = true
       document.getElementById("generate-fee-invoice").innerHTML = "Generating..."
-      const address = document.getElementById("optimism-address-input").value.trim();
-      const response = await fetch(`http://localhost:3000/feestatus/optimism/eth/${address}`);
-      const fee_status = await response.text();
+      const address = document.getElementById("optimism-address-input").value.trim()
+      const response = await fetch(`http://localhost:3000/feestatus/optimism/${address}`)
+      const fee_status = await response.text()
       if (fee_status === "paid") {
-        document.getElementById("invoice-display").innerHTML = "";
-        document.getElementById("invoice-help-text").innerHTML = "Fee is paid. Generate a trade invoice.";
+        document.getElementById("invoice-display").innerHTML = ""
+        document.getElementById("invoice-help-text").innerHTML = "Fee is paid. Generate a trade invoice."
       }
       else {
-        const response = await fetch(`http://localhost:3000/invoice/optimism/usdc/${address}/1000`);
-        const invoice = await response.text();
-        document.getElementById("invoice-display").innerHTML = invoice;
-        document.getElementById("invoice-help-text").innerHTML = "Pay the fee invoice then you can generate a trade invoice";
+        const response = await fetch(`http://localhost:3000/invoice/optimism/eth/${address}/1000`)
+        const invoice = await response.text()
+        document.getElementById("invoice-display").innerHTML = invoice
+        document.getElementById("invoice-help-text").innerHTML = "Pay the fee invoice then you can generate a trade invoice"
       }
       document.getElementById("generate-fee-invoice").innerHTML = "Generated"
-    });
+    })
     document.getElementById("generate-trade-invoice").addEventListener("click", async function () {
-      document.getElementById("invoice-help-text").innerHTML = "Checking fee status...";
-      const address = document.getElementById("optimism-address-input").value.trim();
-      const response = await fetch(`http://thebitcoindex.com/api/feestatus/optimism/usdc/${address}`);
-      const fee_status = await response.text();
-      if (fee_status !== "paid") {
-        document.getElementById("invoice-display").innerHTML = "";
-        document.getElementById("invoice-help-text").innerHTML = "Fee is unpaid. Generate a fee invoice.";
-        return;
+      const address = document.getElementById("optimism-address-input").value.trim()
+      const amount = document.getElementById("btc-amount-input").valueAsNumber * 1e8
+      if (isNaN(amount) || amount === 0) {
+        document.getElementById("invoice-help-text").innerHTML = "Amount is not valid"
       }
-
-      document.getElementById("invoice-help-text").innerHTML = "Fee is paid. We are uploading your USDC to a hash. Please wait 10 seconds.";
-      document.getElementById("invoice-help-text").innerHTML = "Fee is paid. We are uploading your USDC to a hash. This feature is being developed. Come back later to check out new developments";
-
-    });
+      document.getElementById("generate-trade-invoice").disabled = true
+      document.getElementById("generate-trade-invoice").innerHTML = "Generating..."
+      const response = await fetch(`http://localhost:3000/feestatus/optimism/${address}`)
+      const fee_status = await response.text()
+      if (fee_status !== "paid") {
+        document.getElementById("invoice-display").innerHTML = ""
+        document.getElementById("invoice-help-text").innerHTML = "Fee is unpaid. Generate a fee invoice."
+        document.getElementById("generate-trade-invoice").disabled = false
+        document.getElementById("generate-trade-invoice").innerHTML = "Generate Trade Invoice"
+        return
+      }
+      const response_invoice = await fetch(`http://localhost:3000/invoice/optimism/eth/${address}/1000`)
+      const invoice = await response_invoice.text()
+      document.getElementById("invoice-display").innerHTML = invoice
+      document.getElementById("generate-trade-invoice").disabled = false
+      document.getElementById("generate-trade-invoice").innerHTML = "Generate Trade Invoice"
+    })
   </script>
 
 </body>

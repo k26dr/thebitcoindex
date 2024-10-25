@@ -11,16 +11,14 @@
   <h3>Paying the fee</h3>
   <p>When your deposit has reached 2 confirmations, you can begin trading.</p>
   <p>All swaps require a 1000 sat anti-spam fee.</p>
-  <p>
-    <button id="generate-fee-invoice">Generate Fee Invoice</button>
-  </p>
-  <textarea style="display:none" id="fee-invoice"></textarea>
-  <p>Once your fee is paid, you can generate a trade invoice</p>
+
+  <p>Once your fee is paid, you can generate a trade invoice.</p>
 
   <h3>Swap BTC to ETH</h3>
   <p>Optimism Address: <input id="optimism-address-input" value="0xAbA965BDb05d969903e3e83063D7b8cc2D7dE5e2" placeholder="0xabcdef123..."/>
   <p>Sell Amount (BTC): <input id="btc-amount-input" type="number" value="0.01" placeholder="0.01"/>
   <p>
+    <button id="generate-fee-invoice">Generate Fee Invoice</button>
     <button id="generate-trade-invoice">Generate Trade Invoice</button>
   </p>
   <code style="word-wrap:break-word" id="invoice-display"></code>
@@ -28,20 +26,22 @@
 
   <script>
     document.getElementById("generate-fee-invoice").addEventListener("click", async function () {
-      document.getElementById("invoice-help-text").innerHTML = "Checking fee status...";
+      document.getElementById("generate-fee-invoice").disabled = true
+      document.getElementById("generate-fee-invoice").innerHTML = "Generating..."
       const address = document.getElementById("optimism-address-input").value.trim();
-      const response = await fetch(`http://thebitcoindex.com/api/feestatus/optimism/usdc/${address}`);
+      const response = await fetch(`http://localhost:3000/feestatus/optimism/eth/${address}`);
       const fee_status = await response.text();
       if (fee_status === "paid") {
         document.getElementById("invoice-display").innerHTML = "";
         document.getElementById("invoice-help-text").innerHTML = "Fee is paid. Generate a trade invoice.";
       }
       else {
-        const response = await fetch(`http://thebitcoindex.com/api/invoice/optimism/usdc/${address}/1000`);
+        const response = await fetch(`http://localhost:3000/invoice/optimism/usdc/${address}/1000`);
         const invoice = await response.text();
         document.getElementById("invoice-display").innerHTML = invoice;
         document.getElementById("invoice-help-text").innerHTML = "Pay the fee invoice then you can generate a trade invoice";
       }
+      document.getElementById("generate-fee-invoice").innerHTML = "Generated"
     });
     document.getElementById("generate-trade-invoice").addEventListener("click", async function () {
       document.getElementById("invoice-help-text").innerHTML = "Checking fee status...";

@@ -1,4 +1,4 @@
-CREATE TABLE fees_paid (
+CREATE TABLE IF NOT EXISTS fees_paid (
     chain TEXT,
     address TEXT,
     paid INTEGER,

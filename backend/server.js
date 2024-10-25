@@ -21,6 +21,9 @@ const util = require("node:util");
 const exec = util.promisify(nodeChildProcess.exec);
 const port = process.env.PORT || 3000
 const db = require('better-sqlite3')('thebitcoindex.db');
+const fs = require('fs')
+const migration = fs.readFileSync('schema.sql', 'utf8')
+db.exec(migration)
 
 // CORS
 app.use("/", (req, res, next) => {

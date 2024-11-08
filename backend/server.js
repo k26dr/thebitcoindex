@@ -20,10 +20,13 @@ const nodeChildProcess = require("node:child_process");
 const util = require("node:util");
 const exec = util.promisify(nodeChildProcess.exec);
 const port = process.env.PORT || 3000
-const db = require('better-sqlite3')('thebitcoindex.db');
 const fs = require('fs')
-const migration = fs.readFileSync('schema.sql', 'utf8')
-db.exec(migration)
+
+// GLOBALS
+const fees_paid = {}
+
+// CONSTANTS
+const ANTI_SPAM_FEE = 1000 // sats
 
 // CORS
 app.use("/", (req, res, next) => {
@@ -40,13 +43,18 @@ app.get("/", (req, res, next) => {
   return res.sendFile(__dirname + '/index.html');
 })
 
-app.get("/feestatus/:chain/:address", async (req, res, next) => {
-    const row = db.prepare(
-      "SELECT paid FROM fees_paid WHERE chain = ? AND address = ?"
-    ).get(req.params.chain, req.params.address.toLowerCase())
-    if (row && row.paid === 1) res.status(200).send("paid");
+app.get("/feestatus/:address", async (req, res, next) => {
+    if (fees_paid[req.params.address] === 1) res.status(200).send("paid");
     else res.status(200).send("unpaid");
 });
+
+app.get("/invoice/fee/:address", async (req, res, next) => {
+  const invoicegen = await exec(
+    `lncli addinvoice --amt ${ANTI_SPAM_FEE} --memo "fee:${address}"`
+  );
+  const invoice = JSON.parse(invoicegen.stdout).payment_request;
+  res.status(200).send(invoice);
+})
 
 app.get("/invoice/:chain/:currency/:address/:sats", async (req, res, next) => {
   const { chain, currency, address, sats } = req.params;

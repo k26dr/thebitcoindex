@@ -27,7 +27,7 @@ const ANTI_SPAM_FEE = 1000 // sats
 const DATA_FILENAME = 'lightning_dex_data.json'
 
 // GLOBALS
-const globals = readGlobalsFromDisk()
+const { fees_paid, preimages } = readFeesFromDisk()
 
 // CORS
 app.use("/", (req, res, next) => {
@@ -45,7 +45,7 @@ app.get("/", (req, res, next) => {
 })
 
 app.get("/feestatus/:address", async (req, res, next) => {
-    if (globals.fees_paid[req.params.address] === 1) res.status(200).send("paid");
+    if (fees_paid[req.params.address] === 1) res.status(200).send("paid");
     else res.status(200).send("unpaid");
 });
 
@@ -59,15 +59,21 @@ app.get("/invoice/fee/:address", async (req, res, next) => {
 
 app.get("/invoice/:chain/:currency/:address/:sats", async (req, res, next) => {
   const { chain, currency, address, sats } = req.params;
-  if (globals.fees_paid[address] !== 1) {
+  if (chain !== 'optimism' || currency !== 'wbtc') {
+    return res.status(400).send("unsupported chain/currency combo. only optimism:wbtc supported for now");
+  } 
+  if (fees_paid[address] !== 1) {
     return res.status(400).send("pay fee first");
   } else {
-    delete globals.fees_paid[address]
+    delete fees_paid[address]
   }
   const invoicegen = await exec(
     `lncli addinvoice --amt ${sats} --memo "${chain}:${currency}:${address}"`
   );
   const invoice = JSON.parse(invoicegen.stdout).payment_request;
+ 
+  // TODO: Insert logic here to lock funds up on Optimism
+
   res.status(200).send(invoice);
 });
 
@@ -76,42 +82,45 @@ app.use((err, req, res, next) => {
   res.status(500).send(err);
 });
 
-app.listen(port, () => {
+const server = app.listen(port, () => {
   console.log(`Listening on port ${port}`)
 })
 
 // Settle incoming trades and fee payments
-setInterval(readInvoices, 5000)
-async function readInvoices () {
-  const invoice_query = await exec(`lncli listinvoices --index_offset ${globals.last_processed_add_index}`);
+setInterval(processInvoices, 5000)
+async function processInvoices () {
+  const invoice_query = await exec(`lncli listinvoices`);
   const invoices = JSON.parse(invoice_query.stdout).invoices;
   const paid_invoices = invoices.filter(i => i.settled);
   for (let invoice of paid_invoices) {
-    if (invoice.add_index <= globals.last_processed_add_index) continue
-    globals.last_processed_add_index = invoice.add_index
     const memo = invoice.memo;
     if (!memo || !memo.includes(":")) continue;
     if (memo.includes("fee:")) {
       const address = memo.slice(4)
-      globals.fees_paid[address] = 1
+      fees_paid[address] = invoice.settle_date
     }
-    else if (memo.includes("optimism:wbtc:")) {
+    if (memo.includes("optimism:wbtc:")) {
       const address = memo.slice(14)
+    }
+  }
+
+  // Delete old fee data
+  const now = Date.now() / 1000 | 0
+  for (let address in fees_paid) {
+    if (fees_paid[address] < now - 600) {
+      delete fees_paid[address]
     }
   }
 }
 
-// Flush persistent data to disk on exit
-process.on('exit', flushGlobalsToDisk)
 function flushGlobalsToDisk () {
-  const globals = { last_processed_add_index, fees_paid }
-  fs.writeFileSync(DATA_FILENAME, JSON.stringify(globals, null, 2))
+  fs.writeFileSync(DATA_FILENAME, JSON.stringify(fees_paid, null, 2))
 }
 
 // Read persistent data from disk
-function readGlobalsFromDisk () {
+function readFeesFromDisk () {
   if (!fs.existsSync(DATA_FILENAME)) {
-    return { last_processed_add_index: 0, fees_paid: {} }
+    return {}
   }
   const data = fs.readFileSync(DATA_FILENAME, 'utf8')
   return JSON.parse(data)

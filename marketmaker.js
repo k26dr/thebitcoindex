@@ -51,7 +51,7 @@ app.get("/feestatus/:address", async (req, res, next) => {
 
 app.get("/invoice/fee/:address", async (req, res, next) => {
   const invoicegen = await exec(
-    `lncli addinvoice --amt ${ANTI_SPAM_FEE} --memo "fee:${address}"`
+    `lncli addinvoice --amt ${ANTI_SPAM_FEE} --memo "fee:${req.params.address}"`
   );
   const invoice = JSON.parse(invoicegen.stdout).payment_request;
   res.status(200).send(invoice);
